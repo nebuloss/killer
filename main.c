@@ -2,8 +2,6 @@
 #include <tlhelp32.h>
 #include <stdio.h>
 
-#define DICTIONARY_HASH_FUNCTION(h,c) ((h<<5)+h)+c
-
 HINSTANCE instance;
 DWORD pid_winlogon;
 
