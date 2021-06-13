@@ -9,7 +9,7 @@ typedef NTSTATUS (*process_function)(HANDLE); //define a type of function
 
 process_function SuspendProcessHandle,ResumeProcessHandle;
 
-BOOLEAN EnableDebugPrivilege(){ //we must grant to the program debug privilege to suspend and resume process
+BOOLEAN EnableDebugPrivilege(){ //to suspend and resume processes, we need to grant debug privilege to the program 
     //https://social.msdn.microsoft.com/Forums/exchange/en-US/3d32272f-162c-4700-9a20-a179d86cfd14/openprocess-does-not-work-in-a-command-prompt-but-works-on-ps-and-debuggers?forum=windowsgeneraldevelopmentissues
     BOOL ret = FALSE;
 	HANDLE hToken = NULL;
