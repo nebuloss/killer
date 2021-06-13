@@ -123,7 +123,7 @@ void ResumeProcesses(){
 }
 
 //very good french tutorial
-https://pub.phyks.me/sdz/sdz/apprentissage-de-l-api-windows.html
+//https://pub.phyks.me/sdz/sdz/apprentissage-de-l-api-windows.html
 
 
 LRESULT CALLBACK WindowCallbackFunction(HWND window, UINT msg, WPARAM wParam, LPARAM lParam){
