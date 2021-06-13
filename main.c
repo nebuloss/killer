@@ -7,11 +7,12 @@
 HINSTANCE instance;
 DWORD pid_winlogon;
 
-typedef NTSTATUS (*process_function)(HANDLE);
+typedef NTSTATUS (*process_function)(HANDLE); //define a type of function
 
 process_function SuspendProcessHandle,ResumeProcessHandle;
 
-BOOLEAN EnableDebugPrivilege(){
+BOOLEAN EnableDebugPrivilege(){ //we must grant to the program debug privilege to suspend and resume process
+    //https://social.msdn.microsoft.com/Forums/exchange/en-US/3d32272f-162c-4700-9a20-a179d86cfd14/openprocess-does-not-work-in-a-command-prompt-but-works-on-ps-and-debuggers?forum=windowsgeneraldevelopmentissues
     BOOL ret = FALSE;
 	HANDLE hToken = NULL;
 	TOKEN_PRIVILEGES tp;
@@ -32,6 +33,7 @@ BOOLEAN EnableDebugPrivilege(){
 }
 
 BOOLEAN InitializeExports(){
+    //we use native windows functions that are not documented but widely used
     HMODULE hNtdll = GetModuleHandle("NTDLL");
     if (!hNtdll) return FALSE;
     
@@ -42,19 +44,20 @@ BOOLEAN InitializeExports(){
 }
 
 DWORD64 GetLPSTRHash(LPSTR s){
+    //more efficient string comparison
     DWORD64 h=0;
     BYTE c;
     while((c=*s++)) h=(h<<5)+h+c;
     return h;
 }
 
-DWORD FindPID(char *name){
+DWORD FindPID(char *name){ //return the pid of the program from his name (first occurence)
     HANDLE hProcessSnap;
     PROCESSENTRY32 pe32;
     DWORD result = NULL;
     DWORD64 hn;
 
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0); //get all processes running
     if (INVALID_HANDLE_VALUE == hProcessSnap) return 0;
 
     pe32.dwSize = sizeof(PROCESSENTRY32); 
@@ -65,7 +68,7 @@ DWORD FindPID(char *name){
     }
 
     hn=GetLPSTRHash(name);
-    do{
+    do{ //browse the list of processes
         if (GetLPSTRHash(pe32.szExeFile)==hn){
             result = pe32.th32ProcessID;
             break;
@@ -108,7 +111,7 @@ DWORD ResumePID(DWORD pid){
     return ExecPIDFunction(pid,ResumeProcessHandle);
 }
 
-void SuspendProcesses(){  
+void SuspendProcesses(){  //buttons actions
     KillProcess("explorer.exe");   
     SuspendPID(pid_winlogon);
     KillProcess("dwm.exe");
@@ -118,6 +121,10 @@ void ResumeProcesses(){
     ResumePID(pid_winlogon);
     if (!FindPID("explorer.exe")) ShellExecute(NULL,"open","explorer",NULL,NULL,0);
 }
+
+//very good french tutorial
+https://pub.phyks.me/sdz/sdz/apprentissage-de-l-api-windows.html
+
 
 LRESULT CALLBACK WindowCallbackFunction(HWND window, UINT msg, WPARAM wParam, LPARAM lParam){
     switch (msg){
@@ -150,6 +157,7 @@ int WinMain (HINSTANCE current_instance, HINSTANCE previous_instance,LPSTR comma
     HWND window;
     MSG message;
 
+    //check some infrmation before running
     if (!EnableDebugPrivilege()) return 0;
     if (!InitializeExports()) return 0;
     if (!(pid_winlogon=FindPID("winlogon.exe"))) return 0;
