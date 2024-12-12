@@ -4,21 +4,12 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *
 # Remove duplicate function
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1))) 
 
-
 # Compile / Link Flags
 CFLAGS = -c -Wall -std=c99 -O3
 
-
-#CC= x86_64-w64-mingw32-gcc
 CC = gcc
 
-ifeq ($(OS),Windows_NT)
-	LDFLAGS =-mwindows
-else
-	LDFLAGS = 
-endif
-
-DLL_FOLDER=dll
+LDFLAGS =-mwindows
 
 # Main target and filename of the executable
 OUT = killer
@@ -37,17 +28,12 @@ OBJ_DIR = $(call uniq, $(dir $(OBJ)))
 INCLUDES = $(patsubst %, -I %, $(call uniq, $(dir $(call rwildcard,,*.h))))
 LIBS =
 
-# Number of therads available 
-CPUS = $(nproc)
-
-multi:
-	@$(MAKE) -j$(CPUS) --no-print-directory all
-
 all: $(OBJ_DIR) $(OUT)
 	@$(MAKE) run
 
 $(OBJ_DIR):
-	@mkdir -p $@
+	@echo Creating directory $@
+	@if not exist "$(OBJ_DIR)" md "$(OBJ_DIR)"
 
 $(BUILD_DIR)/%.o: %.c
 	@echo "Compiling $<"
@@ -58,12 +44,13 @@ $(OUT): $(OBJ)
 	@$(CC) -o $(OUT) $^ $(LDFLAGS)
 
 clean:
-	@echo "Cleaning Build"
-	@rm -rf $(BUILD_DIR) $(OUT) $(OUT).exe
+	@echo Cleaning Build
+	@if exist $(BUILD_DIR) rmdir /s /q $(BUILD_DIR)
+	@if exist $(OUT).exe del /q $(OUT).exe
 
 rebuild: clean
-	@$(MAKE) -j$(CPUS) --no-print-directory alls
+	@$(MAKE) all
 
 run:
 	@strip $(OUT).exe
-	./$(OUT)
+	./$(OUT).exe
